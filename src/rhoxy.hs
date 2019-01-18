@@ -25,7 +25,7 @@ data Chan = Quote Proc
 
 
 parseNil :: Parser Proc
-parseNil = Nil <$ string "Nil" -- I still don't fully get the applicative style
+parseNil = Nil <$ string "Nil" -- This is _not_ applicitave [functor], it is just functor
 
 parseUnquote :: Parser Proc
 parseUnquote = do
@@ -37,11 +37,7 @@ parseSend :: Parser Proc
 parseSend = do
   c <- parseChan
   _ <- char '!'
-  --TODO Why didn't this work?
-  --p <- between ( (char '(') (char ')') parseProc )
-  _ <- char '('
-  p <- parseProc
-  _ <- char ')'
+  p <- between (char '(') (char ')') parseProc
   return $ Send c p
 
 parseRecv :: Parser Proc
@@ -60,7 +56,7 @@ parseProc = try parseNil
         <|> try parseSend
      -- <|> try parseRecv
      -- <|> try parsePar
-        <|> parseUnquote
+        <|> try parseUnquote
         <|> parseHole
 
 parseChan :: Parser Chan
