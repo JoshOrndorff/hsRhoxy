@@ -15,7 +15,7 @@ import Text.Parsec.String
 data Proc = Nil
           | Unquote Chan
           | Send Chan Proc        -- Comm channel, Process being sent
-          | Recv Chan String Proc -- Comm channel, Name being bound, continuation
+          | Recv Chan Proc Proc   -- Comm channel, Name being bound, Continuation
           | Par Proc Proc         -- Also consider Par [Proc]
           | Hole String           -- Used for substituting
           deriving Show
@@ -41,7 +41,23 @@ parseSend = do
   return $ Send c p
 
 parseRecv :: Parser Proc
-parseRecv = undefined
+-- @Nil?(x){P}
+parseRecv = do
+  chan <- parseChan
+  _ <- char '?'
+  subpattern <- between (char '(') (char ')') parseHole
+  continuation <- between (char '{') (char '}') parseProc
+  return $ Recv chan subpattern continuation
+
+-- for (arg <- chan) { Proc }
+-- parseRecv = do
+--   _ <- string "for ("
+--   subpattern <- parseHole
+--   _ <- string "<-"
+--   chan <- parseChan
+--   _ <- ')'
+--   continuation <- parseProc
+--   return $ Recv $ chan subpattern continuation
 
 parsePar :: Parser Proc
 parsePar = undefined
@@ -54,7 +70,7 @@ parseHole = do
 parseProc :: Parser Proc
 parseProc = try parseNil
         <|> try parseSend
-     -- <|> try parseRecv
+        <|> try parseRecv
      -- <|> try parsePar
         <|> try parseUnquote
         <|> parseHole
