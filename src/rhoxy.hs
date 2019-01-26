@@ -16,7 +16,7 @@ data Proc = Nil
           | Unquote Chan
           | Send Chan Proc        -- Comm channel, Process being sent
           | Recv Chan Proc Proc   -- Comm channel, Name being bound, Continuation
-          | Par Proc Proc         -- Also consider Par [Proc]
+          | Par [Proc]
           | Hole String           -- Used for substituting
           deriving Show
 
@@ -29,9 +29,9 @@ parseNil = Nil <$ string "Nil" -- This is _not_ applicitave [functor], it is jus
 
 parseUnquote :: Parser Proc
 parseUnquote = do
-  _        <- char '*'
-  Quote(p) <- parseChan
-  return p
+  _    <- char '*'
+  chan <- parseChan
+  return $ Unquote chan
 
 parseSend :: Parser Proc
 parseSend = do
