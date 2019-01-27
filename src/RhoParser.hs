@@ -6,7 +6,6 @@ module RhoParser
 ) where
 
 -- TODO Parse rholang-style comments
--- TODO Make Par a larger thing
 
 
 import Text.Parsec
@@ -81,7 +80,6 @@ parseProc :: Parser Proc
 parseProc = try parseNil
         <|> try parseSend
         <|> try parseRecv
-     -- <|> try parsePar
         <|> try parseUnquote
         <|> parseHole
 
