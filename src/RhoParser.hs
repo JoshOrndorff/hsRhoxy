@@ -5,11 +5,10 @@ module RhoParser
 , Par (..)
 ) where
 
--- TODO Parse rholang-style comments
-
 
 import Text.Parsec
 import Text.Parsec.String
+import Text.Parsec.Char (spaces)
 
 
 data Proc = Nil
@@ -27,12 +26,17 @@ data Par = Par [Proc]
 
 parsePar :: Parser Par
 parsePar = do
-  _  <- optional$ char '|'
+  _ <- many parseFiller
+  _ <- optional$ char '|'
+  _ <- many parseFiller
   p <- parseProc -- A Par must contain at least one Proc
   ps <- many $ do
-            _ <- char '|'
-            parseProc -- I think I can leave it naturally in the monad, right?
-  _  <- optional$ char '|'
+        _ <- many parseFiller
+        _ <- char '|'
+        _ <- many parseFiller
+        parseProc
+  _ <- many parseFiller
+  _ <- optional$ char '|'
   return $ Par (p:ps)
 
 parseNil :: Parser Proc
@@ -88,6 +92,26 @@ parseChan = do
   _ <- char '@'
   p <- parseProc
   return $ Quote p
+
+parseLineComment :: Parser ()
+parseLineComment = do
+  _ <- string "//"
+  _ <- manyTill anyChar endOfLine
+  return ()
+
+parseBlockComment :: Parser ()
+parseBlockComment = do
+  _ <- string "/*"
+  _ <- manyTill anyChar (try (string "*/"))
+  return ()
+
+--TODO It could be several comments with space in between
+parseFiller :: Parser ()
+parseFiller = do
+  _ <- spaces
+  _ <- try parseLineComment <|> try parseBlockComment
+  spaces
+
 
 -- Exported for the client
 parseRhoc :: String -> Either ParseError Par
