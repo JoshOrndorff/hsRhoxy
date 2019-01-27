@@ -1,5 +1,8 @@
 module RhoParser
 (parseRhoc
+, Proc (..)
+, Chan (..)
+, Par (..)
 ) where
 
 -- TODO Parse rholang-style comments
@@ -15,13 +18,13 @@ data Proc = Nil
           | Send Chan Proc        -- Comm channel, Process being sent
           | Recv Chan Proc Proc   -- Comm channel, Name being bound, Continuation
           | Hole String           -- Used for substituting
-          deriving Show
+          deriving (Show, Eq)
 
 data Chan = Quote Proc
-          deriving Show
+          deriving (Show, Eq)
 
 data Par = Par [Proc]
-          deriving Show
+          deriving (Show, Eq)
 
 parsePar :: Parser Par
 parsePar = do
