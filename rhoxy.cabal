@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable rhoxy
   main-is:             rhoxy.hs
-  -- other-modules:
+  other-modules:       RhoParser
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                        ,parsec >= 3.1.13 && < 4
