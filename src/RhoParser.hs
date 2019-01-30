@@ -26,18 +26,16 @@ data Par = Par [Proc]
 
 parsePar :: Parser Par
 parsePar = do
-  _ <- many parseFiller
-  _ <- optional$ char '|'
-  _ <- many parseFiller
-  p <- parseProc -- A Par must contain at least one Proc
-  ps <- many $ do
-        _ <- many parseFiller
-        _ <- char '|'
-        _ <- many parseFiller
-        parseProc
-  _ <- many parseFiller
-  _ <- optional$ char '|'
-  return $ Par (p:ps)
+  filler
+  optional $ char '|'
+  ps <- (flip sepEndBy1) (char '|') $ do
+    -- TODO How to tell parsec that _anything_ can be surrounded by filler?
+    filler
+    p <- parseProc
+    filler
+    return p
+  filler
+  return $ Par ps
 
 parseNil :: Parser Proc
 parseNil = Nil <$ string "Nil" -- This is _not_ applicitave [functor], it is just functor
@@ -77,7 +75,7 @@ parseRecv = do
 
 parseHole :: Parser Proc
 parseHole = do
-  name <- many letter
+  name <- many1 letter
   return $ Hole name
 
 parseProc :: Parser Proc
@@ -93,26 +91,24 @@ parseChan = do
   p <- parseProc
   return $ Quote p
 
-parseLineComment :: Parser ()
-parseLineComment = do
+lineComment :: Parser ()
+lineComment = do
   _ <- string "//"
-  _ <- manyTill anyChar endOfLine
-  return ()
+  skipMany (satisfy (/= '\n'))
 
-parseBlockComment :: Parser ()
-parseBlockComment = do
+blockComment :: Parser ()
+blockComment = do
   _ <- string "/*"
   _ <- manyTill anyChar (try (string "*/"))
   return ()
 
---TODO It could be several comments with space in between
-parseFiller :: Parser ()
-parseFiller = do
-  _ <- spaces
-  _ <- try parseLineComment <|> try parseBlockComment
-  spaces
+
+filler :: Parser ()
+filler = skipMany $
+  (try (skipMany1 space) <|> try lineComment <|> try blockComment)
 
 
 -- Exported for the client
+--TODO How to make sure I've parsed the entire file?
 parseRhoc :: String -> Either ParseError Par
 parseRhoc = parse parsePar "useless-string"
