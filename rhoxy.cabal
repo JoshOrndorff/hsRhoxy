@@ -19,6 +19,8 @@ cabal-version:       >=1.10
 executable rhoxy
   main-is:             rhoxy.hs
   other-modules:       RhoParser
+                       RhoTypes
+                       Evaluator
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12,
                        parsec >= 3.1.13 && < 4
@@ -32,6 +34,8 @@ executable tests
   type:                exitcode-stdio-1.0
   main-is:             tests.hs
   other-modules:       RhoParser
+                       RhoTypes
+                       Evaluator
   build-depends:       base >=4.11 && <4.12,
                        parsec >= 3.1.13 && < 4,
                        HUnit >= 1.6 && < 2

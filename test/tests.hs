@@ -4,9 +4,14 @@
 import Test.HUnit
 import RhoParser
 import RhoTypes
+import Evaluator
 
 -- TODO I can't get this file to give me results or failures with cabal test
 -- If I make it executible, it works as expected.
+
+-- TODO Move parser and other tests into several files.
+
+
 miscTests = TestList [
   TestCase (assertEqual "parsing Nil" (Right (Par [Nil])) (parseRhoc "Nil")),
   TestCase (assertEqual "parsing Send" (Right (Par [Send Nil Nil])) (parseRhoc "@Nil!(Nil)"))
@@ -30,4 +35,12 @@ commentTests = TestList [
   ]
 
 
-main = runTestTT commentTests
+
+subTests = TestList [
+  -- Peg Binder Target
+  TestCase (assertEqual "s1" Nil (sub Nil "P" (FreeName "P"))),
+  TestCase (assertEqual "s2" (FreeName "Q") (sub Nil "P" (FreeName "Q"))),
+  TestCase (assertEqual "s3" (Par [Nil, FreeName "Q"]) (sub Nil "P" (Par [FreeName "P", FreeName "Q"])))
+  ]
+
+main = runTestTT subTests
