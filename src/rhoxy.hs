@@ -5,23 +5,21 @@ module Main where
 import System.Environment
 
 import RhoParser
+import RhoTypes
 
 -- For executing
 --import...
 
-subN :: Proc -> String -> Chan -> Chan
-subN peg name (Quote p) = Quote $ sub peg name p
-
 sub :: Proc -> String -> Proc -> Proc
-sub _   _    Nil = Nil
-sub peg name (Unquote c) = Unquote $ subN peg name c
-sub peg name (Send c p) =
-  Send (subN peg name c) (sub peg name p)
-sub peg name (Recv c p1 p2) = Recv (subN peg name c) (sub peg name p1) (sub peg name p2)
-sub peg name (Hole n) =
-  if name == n
-  then peg
-  else Hole n
+sub peg binder target =
+  case target of
+    Nil -> Nil
+    Send c p -> Send (sub peg binder c) (sub peg binder p)
+    Recv c p1 p2 -> -- TODO Is this where the `=` operator is important?
+      Recv (sub peg binder c) (sub peg binder p1) (sub peg binder p2)
+      -- I think it's better to do exactly this. Then there is no `=` operator
+      -- If you want to shadow, do it explicitly with new
+    FreeName f -> if binder == f then peg else FreeName f
 
 main :: IO ()
 main = do

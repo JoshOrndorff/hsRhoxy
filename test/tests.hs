@@ -3,13 +3,13 @@
 
 import Test.HUnit
 import RhoParser
+import RhoTypes
 
 -- TODO I can't get this file to give me results or failures with cabal test
 -- If I make it executible, it works as expected.
 miscTests = TestList [
   TestCase (assertEqual "parsing Nil" (Right (Par [Nil])) (parseRhoc "Nil")),
-  TestCase (assertEqual "parsing Send" (Right (Par [Send (Quote Nil) Nil])) (parseRhoc "@Nil!(Nil)")),
-  TestCase (assertEqual "for (foo 3)," (1,2) (1,3))
+  TestCase (assertEqual "parsing Send" (Right (Par [Send Nil Nil])) (parseRhoc "@Nil!(Nil)"))
   ]
 
 

@@ -1,8 +1,5 @@
 module RhoParser
 (parseRhoc
-, Proc (..)
-, Chan (..)
-, Par (..)
 ) where
 
 
@@ -10,21 +7,9 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Char (spaces)
 
+import RhoTypes
 
-data Proc = Nil
-          | Unquote Chan
-          | Send Chan Proc        -- Comm channel, Process being sent
-          | Recv Chan Proc Proc   -- Comm channel, Name being bound, Continuation
-          | Hole String           -- Used for substituting
-          deriving (Show, Eq)
-
-data Chan = Quote Proc
-          deriving (Show, Eq)
-
-data Par = Par [Proc]
-          deriving (Show, Eq)
-
-parsePar :: Parser Par
+parsePar :: Parser Proc
 parsePar = do
   filler
   optional $ char '|'
@@ -40,11 +25,11 @@ parsePar = do
 parseNil :: Parser Proc
 parseNil = Nil <$ string "Nil" -- This is _not_ applicitave [functor], it is just functor
 
-parseUnquote :: Parser Proc
-parseUnquote = do
-  _    <- char '*'
-  chan <- parseChan
-  return $ Unquote chan
+-- parseUnquote :: Parser Proc
+-- parseUnquote = do
+--   _    <- char '*'
+--   chan <- parseChan
+--   return $ Unquote chan
 
 parseSend :: Parser Proc
 parseSend = do
@@ -57,15 +42,15 @@ parseRecv :: Parser Proc
 -- @Nil?(x){P}
 parseRecv = do
   chan <- parseChan
-  _ <- char '?'
-  subpattern <- between (char '(') (char ')') parseHole
+  char '?'
+  subPattern <- between (char '(') (char ')') parseFreeName
   continuation <- between (char '{') (char '}') parseProc
-  return $ Recv chan subpattern continuation
+  return $ Recv chan subPattern continuation
 
 -- for (arg <- chan) { Proc }
 -- parseRecv = do
 --   _ <- string "for ("
---   subpattern <- parseHole
+--   subpattern <- parseFreeName
 --   _ <- string "<-"
 --   chan <- parseChan
 --   _ <- ')'
@@ -73,23 +58,21 @@ parseRecv = do
 --   return $ Recv $ chan subpattern continuation
 
 
-parseHole :: Parser Proc
-parseHole = do
+parseFreeName :: Parser Proc
+parseFreeName = do
   name <- many1 letter
-  return $ Hole name
+  return $ FreeName name
 
 parseProc :: Parser Proc
 parseProc = try parseNil
         <|> try parseSend
         <|> try parseRecv
-        <|> try parseUnquote
-        <|> parseHole
+        <|> parseFreeName
 
-parseChan :: Parser Chan
+parseChan :: Parser Proc
 parseChan = do
-  _ <- char '@'
-  p <- parseProc
-  return $ Quote p
+  char '@'
+  parseProc
 
 lineComment :: Parser ()
 lineComment = do
@@ -110,5 +93,5 @@ filler = skipMany $
 
 -- Exported for the client
 --TODO How to make sure I've parsed the entire file?
-parseRhoc :: String -> Either ParseError Par
+parseRhoc :: String -> Either ParseError Proc
 parseRhoc = parse parsePar "useless-string"
