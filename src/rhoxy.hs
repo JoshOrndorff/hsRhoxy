@@ -16,6 +16,7 @@ main = do
   let parseResult = parseRhoc prog
   case parseResult of
     Left e -> print e
-    Right ast -> do
+    Right (Par pool) -> do
       putStrLn "Parsed AST:"
-      print ast
+      print pool
+      print $ autoReduce pool

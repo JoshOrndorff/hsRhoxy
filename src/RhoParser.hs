@@ -36,7 +36,7 @@ parseSend = do
   c <- parseChan
   _ <- char '!'
   p <- between (char '(') (char ')') parseProc
-  return $ Send c p
+  return $ Send c p -- TODO How does this actually typecheck? Don't I need a record type?
 
 parseRecv :: Parser Proc
 -- @Nil?(x){P}
