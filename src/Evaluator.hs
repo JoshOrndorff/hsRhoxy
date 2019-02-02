@@ -1,5 +1,5 @@
 module Evaluator
-(sub
+( sub
 , autoReduce
 ) where
 
@@ -17,7 +17,7 @@ type ProcessPool = [Proc]
 sub :: Proc -> String -> Proc -> Proc
 sub peg binder target =
   case target of
-    Nil -> Nil
+    Nil g -> Nil g
     Send c p -> Send (sub peg binder c) (sub peg binder p)
     Recv c p1 p2 -> -- TODO Is this where the `=` operator is important? or shaddowing?
       Recv (sub peg binder c) (sub peg binder p1) (sub peg binder p2)
@@ -47,7 +47,7 @@ autoReduce' :: Tuplespace -> ProcessPool -> Either String Tuplespace
 autoReduce' t [] = Right t
 autoReduce' t@(sends, recvs) (p:ool) =
   case p of
-    Nil -> autoReduce' t ool
+    (Nil _) -> autoReduce' t ool
     (Par newPool) -> autoReduce' t (newPool ++ ool) -- Will this ever be relevant
     (FreeName n) -> Left $ "Name " ++ n ++ " was not bound"
         -- TODO Is there usually another piece that scans the AST before

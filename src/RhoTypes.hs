@@ -1,21 +1,28 @@
-module RhoTypes where
+module RhoTypes
+( Proc
+, nil
+, Proc' (Par, Send, Recv, FreeName, Nil)
+) where
 
-data Proc = Par [Proc] -- TODO use this tag OR type Par = [Proc]
-          | Send {channel :: Proc, message :: Proc}
-          | Recv {channel :: Proc, subPattern :: Proc, continuation :: Proc}
-          | FreeName String
-          | Nil --TODO (Ground a => Maybe a)
-    --  it's a very strong convention in Haskell to never add typeclass constraints in data declarations.
-          deriving (Show, Ord, Eq)
 
--- data Primative = RhoString
---                | RhoInt
---
--- class Ground a where
---   rhoType :: a -> Primative
---
--- instance Ground Int where
---   rhoType _ = RhoInt
---
--- instance Ground String where
---   rhoType _ = RhoString
+-- We're only doing basic rho calc, so don't make
+-- client's deal with generality of ground terms yet
+type Proc = Proc' ()
+nil = Nil ()
+
+-- Processes are parametric in a ground type.
+-- For basic rho calc with a single ground, () will do
+-- For rholang, use a datatype like Primative below
+
+data Proc' a =
+    Par [Proc' a] -- TODO use this tag OR type Par = [Proc]
+  | Send {channel :: Proc' a, message :: Proc' a}
+  | Recv {channel :: Proc' a, subPattern :: Proc' a, continuation' :: Proc' a}
+  | FreeName String
+  | Nil a
+  deriving (Show, Ord, Eq)
+-- it's a very strong convention in Haskell to never add typeclass constraints in data declarations
+
+
+data Primative = RhoString
+               | RhoInt

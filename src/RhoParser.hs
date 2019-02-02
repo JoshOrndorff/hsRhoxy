@@ -23,13 +23,7 @@ parsePar = do
   return $ Par ps
 
 parseNil :: Parser Proc
-parseNil = Nil <$ string "Nil" -- This is _not_ applicitave [functor], it is just functor
-
--- parseUnquote :: Parser Proc
--- parseUnquote = do
---   _    <- char '*'
---   chan <- parseChan
---   return $ Unquote chan
+parseNil = nil <$ string "Nil"
 
 parseSend :: Parser Proc
 parseSend = do
