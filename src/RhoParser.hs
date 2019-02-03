@@ -37,9 +37,9 @@ parseRecv :: Parser Proc
 parseRecv = do
   chan <- parseChan
   char '?'
-  subPattern <- between (char '(') (char ')') parseFreeName
+  binder <- between (char '(') (char ')') parseBinder
   continuation <- between (char '{') (char '}') parseProc
-  return $ Recv chan subPattern continuation
+  return $ Recv chan binder continuation
 
 -- for (arg <- chan) { Proc }
 -- parseRecv = do
@@ -51,10 +51,11 @@ parseRecv = do
 --   continuation <- parseProc
 --   return $ Recv $ chan subpattern continuation
 
+parseBinder = many1 letter
 
 parseFreeName :: Parser Proc
 parseFreeName = do
-  name <- many1 letter
+  name <- parseBinder
   return $ FreeName name
 
 parseProc :: Parser Proc

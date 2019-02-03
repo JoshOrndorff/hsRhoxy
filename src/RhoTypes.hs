@@ -17,7 +17,7 @@ nil = Nil ()
 data Proc' a =
     Par [Proc' a] -- TODO use this tag OR type Par = [Proc]
   | Send {channel :: Proc' a, message :: Proc' a}
-  | Recv {channel :: Proc' a, subPattern :: Proc' a, continuation' :: Proc' a}
+  | Recv {channel :: Proc' a, subPattern :: String, continuation' :: Proc' a}
   | FreeName String
   | Nil a
   deriving (Show, Ord, Eq)

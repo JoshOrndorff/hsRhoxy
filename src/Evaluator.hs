@@ -19,8 +19,8 @@ sub peg binder target =
   case target of
     Nil g -> Nil g
     Send c p -> Send (sub peg binder c) (sub peg binder p)
-    Recv c p1 p2 -> -- TODO Is this where the `=` operator is important? or shaddowing?
-      Recv (sub peg binder c) (sub peg binder p1) (sub peg binder p2)
+    Recv c b p2 -> -- TODO Is this where the `=` operator is important? or shaddowing?
+      Recv (sub peg binder c) b (sub peg binder p2)
     FreeName f -> if binder == f then peg else FreeName f
     Par ps -> Par $ map (sub peg binder) $ ps
 
@@ -50,13 +50,12 @@ autoReduce' t@(sends, recvs) (p:ool) =
     (Nil _) -> autoReduce' t ool
     (Par newPool) -> autoReduce' t (newPool ++ ool) -- Will this ever be relevant
     (FreeName n) -> Left $ "Name " ++ n ++ " was not bound"
-        -- TODO Is there usually another piece that scans the AST before
-        -- evaluating that should catch unbound names?
+        -- TODO Scan AST for freenames before evaluating
     s@(Send c m) ->
       case Map.lookup c recvs of
-        Just (r@(Recv _ (FreeName b) cont):_) -> autoReduce' (pruneTuplespace r t) $ (sub m b cont):ool
+        Just (r@(Recv _ b cont):_) -> autoReduce' (pruneTuplespace r t) $ (sub m b cont):ool
         _                          -> autoReduce' (growTuplespace s t) ool
-    r@(Recv c (FreeName b) cont) ->
+    r@(Recv c b cont) ->
       case Map.lookup c sends of
         Just (s@(Send _ m):_) -> autoReduce' (pruneTuplespace s t) $ (sub m b cont):ool
         _                          -> autoReduce' (growTuplespace r t) ool
@@ -67,3 +66,16 @@ autoReduce' t@(sends, recvs) (p:ool) =
 -- tuplespace and only then (possibly interactively or algorithmiaclly) choose
 -- which comm even to reduce next. This second option allows for debugging
 -- observation of execution, and forcing specific nondeterministic outcomes.
+
+
+-- Returns a list of all free names in a process. Useful to ensure
+-- there are no top-level free names.
+-- My instinct was that we wouldn't be comming over processes
+-- with freenames in them either, but now I can't think of a
+-- good reason not to.
+freenames :: Proc -> [String]
+freenames (Nil _) = []
+freenames (Par ps) = foldr (++) [] $ map freenames ps -- is there a better-style way to flatten?
+freenames (FreeName n) = [n]
+freenames (Send c m) = (freenames c) ++ (freenames m)
+freenames (Recv c binder cont) = (freenames c) ++ (delete binder $ freenames cont)
