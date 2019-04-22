@@ -1,6 +1,13 @@
 Rhoxy
 ======
-An aspiring interpreter for rholang
+Active work on rhoxy has shifted to the javascript implmentation https://github.com/JoshOrndorff/jsRhoxy.
+
+For more active rholang work in haskell, see https://github.com/tgrospic/rholang-hs
+
+
+hs Rhoxy
+--------
+An aspiring interpreter for rholang, written in haskell.
 
 Usage
 -----
