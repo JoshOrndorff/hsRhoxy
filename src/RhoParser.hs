@@ -15,6 +15,7 @@ parsePar = do
   optional $ char '|'
   ps <- (flip sepEndBy1) (char '|') $ do
     -- TODO How to tell parsec that _anything_ can be surrounded by filler?
+    -- You can't
     filler
     p <- parseProc
     filler
@@ -59,6 +60,7 @@ parseFreeName = do
   return $ FreeName name
 
 parseProc :: Parser Proc
+--TODO maybe move filler stuff here.
 parseProc = try parseNil
         <|> try parseSend
         <|> try parseRecv
